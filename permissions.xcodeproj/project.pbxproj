@@ -13,6 +13,7 @@
 		333E4C122A8F6D09006DFE66 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 333E4C102A8F6D09006DFE66 /* Main.storyboard */; };
 		333E4C142A8F6D0B006DFE66 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 333E4C132A8F6D0B006DFE66 /* Assets.xcassets */; };
 		333E4C172A8F6D0B006DFE66 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 333E4C152A8F6D0B006DFE66 /* LaunchScreen.storyboard */; };
+		333E4C202A8F899E006DFE66 /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 333E4C1F2A8F899E006DFE66 /* Zip */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				333E4C202A8F899E006DFE66 /* Zip in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +85,9 @@
 			dependencies = (
 			);
 			name = permissions;
+			packageProductDependencies = (
+				333E4C1F2A8F899E006DFE66 /* Zip */,
+			);
 			productName = permissions;
 			productReference = 333E4C072A8F6D09006DFE66 /* permissions.app */;
 			productType = "com.apple.product-type.application";
@@ -111,6 +116,9 @@
 				Base,
 			);
 			mainGroup = 333E4BFE2A8F6D09006DFE66;
+			packageReferences = (
+				333E4C1E2A8F899E006DFE66 /* XCRemoteSwiftPackageReference "Zip" */,
+			);
 			productRefGroup = 333E4C082A8F6D09006DFE66 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -358,6 +366,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		333E4C1E2A8F899E006DFE66 /* XCRemoteSwiftPackageReference "Zip" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/marmelroy/Zip";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		333E4C1F2A8F899E006DFE66 /* Zip */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 333E4C1E2A8F899E006DFE66 /* XCRemoteSwiftPackageReference "Zip" */;
+			productName = Zip;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 333E4BFF2A8F6D09006DFE66 /* Project object */;
 }

@@ -98,11 +98,15 @@ class ViewController: UIViewController {
     
     
     @objc func playButtonTapped() {
-        print("playButtonTapped CLICKED")
-        player?.play()
-        playButton.isHidden = true
-        pauseButton.isHidden = false
-        replayButton.isHidden = true // Hide the replay button when play is tapped
+        if let _ = selectedVideoURL{
+            
+            
+            print("playButtonTapped CLICKED")
+            player?.play()
+            playButton.isHidden = true
+            pauseButton.isHidden = false
+            replayButton.isHidden = true // Hide the replay button when play is tapped
+        }
     }
     
     @objc func pauseButtonTapped() {
@@ -179,7 +183,6 @@ class ViewController: UIViewController {
         timerLabel.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-//            playButton.centerXAnchor.constraint(equalTo: videoPlayerView.centerXAnchor),
             playButton.leadingAnchor.constraint(equalTo: videoPlayerView.leadingAnchor, constant: 20),
             playButton.bottomAnchor.constraint(equalTo: videoPlayerView.bottomAnchor, constant: -10),
             

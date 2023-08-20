@@ -16,7 +16,7 @@ class ViewController: UIViewController {
 
     let videoPlayerView: UIView = {
             let view = UIView()
-            view.backgroundColor = .green
+            view.backgroundColor = .systemGray5
             return view
         }()
         
@@ -36,6 +36,36 @@ class ViewController: UIViewController {
             return button
         }()
         
+    
+    let playButton: UIButton = {
+           let button = UIButton()
+           button.setImage(UIImage(systemName: "play.circle.fill"), for: .normal)
+           button.addTarget(self, action: #selector(playButtonTapped), for: .touchUpInside)
+           return button
+       }()
+    
+    let replayButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "arrow.counterclockwise"), for: .normal)
+        button.addTarget(self, action: #selector(replayButtonTapped), for: .touchUpInside)
+        button.isHidden = true // Hide the replay button initially
+        return button
+    }()
+
+       let pauseButton: UIButton = {
+           let button = UIButton()
+           button.setImage(UIImage(systemName: "pause.circle.fill"), for: .normal)
+           button.addTarget(self, action: #selector(pauseButtonTapped), for: .touchUpInside)
+           return button
+       }()
+
+       let timerLabel: UILabel = {
+           let label = UILabel()
+           label.textColor = .white
+           label.font = UIFont.systemFont(ofSize: 14)
+           return label
+       }()
+    
     var selectedVideoURL: URL?
     var player: AVPlayer?
     var playerLayer: AVPlayerLayer?
@@ -48,20 +78,58 @@ class ViewController: UIViewController {
         PHPhotoLibrary.execute(controller: self, onAccessHasBeenGranted: {
             
         })
+    
 
         pickImageButton.addTarget(self, action: #selector(onPickImageButtonClicked), for: .touchUpInside)
         setupViews()
         setupConstraints()
  
-//        if let videoURL = Bundle.main.url(forResource: "sampleVideo", withExtension: "mp4") {
-//                    player = AVPlayer(url: videoURL)
-//                    playerLayer = AVPlayerLayer(player: player)
-//                    playerLayer?.frame = videoPlayerView.bounds
-//                    playerLayer?.videoGravity = .resizeAspectFill
-//                    videoPlayerView.layer.addSublayer(playerLayer!)
-//                    player?.play()
-//                }
+    }
 
+    override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+
+            // Start a timer to update the timer label every second
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                self?.updateTimerLabel()
+            }
+        }
+    
+    
+    @objc func playButtonTapped() {
+        print("playButtonTapped CLICKED")
+        player?.play()
+        playButton.isHidden = true
+        pauseButton.isHidden = false
+        replayButton.isHidden = true // Hide the replay button when play is tapped
+    }
+    
+    @objc func pauseButtonTapped() {
+       print("pauseButtonTapped CLICKED")
+       player?.pause()
+       playButton.isHidden = false
+       pauseButton.isHidden = true
+    }
+
+    @objc func replayButtonTapped() {
+        player?.seek(to: .zero)
+        player?.play()
+        replayButton.isHidden = true
+        pauseButton.isHidden = false
+    }
+    
+    func updateTimerLabel() {
+       guard let player = player else {
+           return
+       }
+
+       let currentTime = player.currentTime().seconds
+       let duration = player.currentItem?.duration.seconds ?? 0
+
+       let currentTimeString = String(format: "%.1f", currentTime)
+       let durationString = String(format: "%.1f", duration)
+
+       timerLabel.text = "\(currentTimeString)s / \(durationString)s"
     }
 
     
@@ -85,10 +153,55 @@ class ViewController: UIViewController {
     
     
     func setupViews() {
-            view.addSubview(videoPlayerView)
-            view.addSubview(selectVideoButton)
-            view.addSubview(editVideoButton)
-        }
+//        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(videoPlayerViewTapped))
+//        videoPlayerView.addGestureRecognizer(tapGesture)
+//        videoPlayerView.isUserInteractionEnabled = true
+        
+        videoPlayerView.addSubview(playButton)
+        videoPlayerView.addSubview(pauseButton)
+        videoPlayerView.addSubview(replayButton)
+        videoPlayerView.addSubview(timerLabel)
+
+        
+        videoPlayerView.bringSubviewToFront(playButton)
+        videoPlayerView.bringSubviewToFront(pauseButton)
+        
+        // Set up their initial positions (adjust as needed)
+        playButton.frame = CGRect(x: 20, y: 20, width: 100, height: 100)
+        pauseButton.frame = CGRect(x: 20, y: 20, width: 100, height: 100)
+        timerLabel.frame = CGRect(x: 70, y: 25, width: 100, height: 30)
+
+
+        playButton.translatesAutoresizingMaskIntoConstraints = false
+        pauseButton.translatesAutoresizingMaskIntoConstraints = false
+        replayButton.translatesAutoresizingMaskIntoConstraints = false
+        timerLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+//            playButton.centerXAnchor.constraint(equalTo: videoPlayerView.centerXAnchor),
+            playButton.leadingAnchor.constraint(equalTo: videoPlayerView.leadingAnchor, constant: 20),
+            playButton.bottomAnchor.constraint(equalTo: videoPlayerView.bottomAnchor, constant: -10),
+            
+
+            pauseButton.leadingAnchor.constraint(equalTo: videoPlayerView.leadingAnchor, constant: 20),
+            pauseButton.bottomAnchor.constraint(equalTo: videoPlayerView.bottomAnchor, constant: -10),
+
+            replayButton.leadingAnchor.constraint(equalTo: videoPlayerView.leadingAnchor, constant: 20),
+            replayButton.bottomAnchor.constraint(equalTo: videoPlayerView.bottomAnchor, constant: -10),
+
+            timerLabel.centerXAnchor.constraint(equalTo: videoPlayerView.centerXAnchor),
+            timerLabel.topAnchor.constraint(equalTo: playButton.bottomAnchor, constant: 20),
+            
+
+        ])
+
+
+        pauseButton.isHidden = true
+
+        view.addSubview(videoPlayerView)
+        view.addSubview(selectVideoButton)
+        view.addSubview(editVideoButton)
+    }
         
         func setupConstraints() {
             videoPlayerView.translatesAutoresizingMaskIntoConstraints = false
@@ -102,12 +215,19 @@ class ViewController: UIViewController {
                 videoPlayerView.heightAnchor.constraint(equalToConstant: 200),
                 
                 selectVideoButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                selectVideoButton.topAnchor.constraint(equalTo: videoPlayerView.bottomAnchor, constant: 16),
+                selectVideoButton.topAnchor.constraint(equalTo: videoPlayerView.bottomAnchor, constant: 40),
                 
                 editVideoButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                editVideoButton.topAnchor.constraint(equalTo: selectVideoButton.bottomAnchor, constant: 16)
+                editVideoButton.topAnchor.constraint(equalTo: selectVideoButton.bottomAnchor)
             ])
         }
+    
+    @objc func videoPlayerViewTapped() {
+        if let player = player {
+            player.seek(to: CMTime.zero)
+            player.play()
+        }
+    }
     
     func compressImageAndCreateZip(image: UIImage, zipFileName: String) {
         // Get the binary data of the image
@@ -159,6 +279,13 @@ class ViewController: UIViewController {
         playerLayer?.videoGravity = .resizeAspectFill
         videoPlayerView.layer.addSublayer(playerLayer!)
         player?.play()
+
+        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem, queue: nil) { [weak self] _ in
+            self?.playButton.isHidden = true
+            self?.pauseButton.isHidden = true
+            self?.replayButton.isHidden = false
+        }
+
     }
     
        @objc func editVideoButtonTapped() {
@@ -234,25 +361,6 @@ private func onNotDetermined(_ onDeniedOrRestricted: @escaping (()->Void), _ onA
 
 extension ViewController: UIImagePickerControllerDelegate,
                           UINavigationControllerDelegate {
-//    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-//        // 1
-//        picker.dismiss(animated: true)
-//    }
-//
-//    func imagePickerController(
-//        _ picker: UIImagePickerController,
-//        didFinishPickingMediaWithInfo
-//        info: [UIImagePickerController.InfoKey : Any]
-//    ) {
-//        picker.dismiss(animated: true)
-//
-//        // 2
-//        guard let image = info[.originalImage] as? UIImage else {
-//            return
-//        }
-//        //        print(image.size, image.cgImage, image.scale, image.imageOrientation)
-//    }
-    
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true, completion: nil)
@@ -261,7 +369,12 @@ extension ViewController: UIImagePickerControllerDelegate,
            mediaType == "public.movie",
            let videoURL = info[.mediaURL] as? URL {
             selectedVideoURL = videoURL
-            playSelectedVideo() // Play the selected video
+            playSelectedVideo()
+            playButtonTapped()
+            self.videoPlayerView.bringSubviewToFront(self.playButton)
+            self.videoPlayerView.bringSubviewToFront(self.pauseButton)
+            self.videoPlayerView.bringSubviewToFront(self.replayButton)
+
         }
     }
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
@@ -275,7 +388,7 @@ extension ViewController: UIImagePickerControllerDelegate,
 extension ViewController: UIVideoEditorControllerDelegate {
     func videoEditorController(_ editor: UIVideoEditorController, didSaveEditedVideoToPath editedVideoPath: String) {
           editor.dismiss(animated: true, completion: nil)
-          // You can perform actions with the edited video, like saving it or playing it.
+          
       }
       
       func videoEditorControllerDidCancel(_ editor: UIVideoEditorController) {

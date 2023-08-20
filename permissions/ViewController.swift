@@ -476,6 +476,7 @@ extension ViewController: UIVideoEditorControllerDelegate {
           editor.dismiss(animated: true, completion: nil)
         if let editedVideoURL = URL(string: "file://" + editedVideoPath) {
             self.selectedVideoURL = editedVideoURL
+            self.player?.pause()
             self.playSelectedVideo()
             playButtonTapped()
 

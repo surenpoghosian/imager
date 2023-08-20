@@ -13,7 +13,10 @@ class ViewController: UIViewController {
     var picker: UIImagePickerController!
     @IBOutlet weak var pickImageButton: UIButton!
     var videoEditor = UIVideoEditorController()
-
+    var selectedVideoURL: URL?
+    var player: AVPlayer?
+    var playerLayer: AVPlayerLayer?
+    
     let videoPlayerView: UIView = {
             let view = UIView()
             view.backgroundColor = .systemGray5
@@ -66,9 +69,7 @@ class ViewController: UIViewController {
            return label
        }()
     
-    var selectedVideoURL: URL?
-    var player: AVPlayer?
-    var playerLayer: AVPlayerLayer?
+  
  
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -377,6 +378,8 @@ extension ViewController: UIImagePickerControllerDelegate,
 
         }
     }
+    
+    
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true, completion: nil)
     }
@@ -388,7 +391,17 @@ extension ViewController: UIImagePickerControllerDelegate,
 extension ViewController: UIVideoEditorControllerDelegate {
     func videoEditorController(_ editor: UIVideoEditorController, didSaveEditedVideoToPath editedVideoPath: String) {
           editor.dismiss(animated: true, completion: nil)
-          
+        if let editedVideoURL = URL(string: "file://" + editedVideoPath) {
+            self.selectedVideoURL = editedVideoURL
+            self.playSelectedVideo()
+            playButtonTapped()
+
+            self.videoPlayerView.bringSubviewToFront(self.playButton)
+            self.videoPlayerView.bringSubviewToFront(self.pauseButton)
+            self.videoPlayerView.bringSubviewToFront(self.replayButton)
+
+            print(editedVideoURL)
+          }
       }
       
       func videoEditorControllerDidCancel(_ editor: UIVideoEditorController) {

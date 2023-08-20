@@ -12,7 +12,34 @@ import Zip
 class ViewController: UIViewController {
     var picker: UIImagePickerController!
     @IBOutlet weak var pickImageButton: UIButton!
-    
+    var videoEditor = UIVideoEditorController()
+
+    let videoPlayerView: UIView = {
+            let view = UIView()
+            view.backgroundColor = .green
+            return view
+        }()
+        
+        let selectVideoButton: UIButton = {
+            let button = UIButton()
+            button.setTitle("Select Video", for: .normal)
+            button.setTitleColor(.blue, for: .normal)
+            button.addTarget(self, action: #selector(selectVideoButtonTapped), for: .touchUpInside)
+            return button
+        }()
+        
+        let editVideoButton: UIButton = {
+            let button = UIButton()
+            button.setTitle("Edit Video", for: .normal)
+            button.setTitleColor(.blue, for: .normal)
+            button.addTarget(self, action: #selector(editVideoButtonTapped), for: .touchUpInside)
+            return button
+        }()
+        
+    var selectedVideoURL: URL?
+    var player: AVPlayer?
+    var playerLayer: AVPlayerLayer?
+ 
     override func viewDidLoad() {
         super.viewDidLoad()
         picker = UIImagePickerController()
@@ -23,16 +50,22 @@ class ViewController: UIViewController {
         })
 
         pickImageButton.addTarget(self, action: #selector(onPickImageButtonClicked), for: .touchUpInside)
-        
+        setupViews()
+        setupConstraints()
+ 
+//        if let videoURL = Bundle.main.url(forResource: "sampleVideo", withExtension: "mp4") {
+//                    player = AVPlayer(url: videoURL)
+//                    playerLayer = AVPlayerLayer(player: player)
+//                    playerLayer?.frame = videoPlayerView.bounds
+//                    playerLayer?.videoGravity = .resizeAspectFill
+//                    videoPlayerView.layer.addSublayer(playerLayer!)
+//                    player?.play()
+//                }
 
     }
 
     
-    @objc func onPickImageButtonClicked(){
-//        DispatchQueue.main.async {
-//            self.present(self.picker, animated: true)
-//        }
-        
+    @objc func onPickImageButtonClicked(){        
         let status = PHPhotoLibrary.authorizationStatus()
         switch status {
         case .notDetermined:
@@ -50,6 +83,31 @@ class ViewController: UIViewController {
         }
     }
     
+    
+    func setupViews() {
+            view.addSubview(videoPlayerView)
+            view.addSubview(selectVideoButton)
+            view.addSubview(editVideoButton)
+        }
+        
+        func setupConstraints() {
+            videoPlayerView.translatesAutoresizingMaskIntoConstraints = false
+            selectVideoButton.translatesAutoresizingMaskIntoConstraints = false
+            editVideoButton.translatesAutoresizingMaskIntoConstraints = false
+            
+            NSLayoutConstraint.activate([
+                videoPlayerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                videoPlayerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                videoPlayerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                videoPlayerView.heightAnchor.constraint(equalToConstant: 200),
+                
+                selectVideoButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                selectVideoButton.topAnchor.constraint(equalTo: videoPlayerView.bottomAnchor, constant: 16),
+                
+                editVideoButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                editVideoButton.topAnchor.constraint(equalTo: selectVideoButton.bottomAnchor, constant: 16)
+            ])
+        }
     
     func compressImageAndCreateZip(image: UIImage, zipFileName: String) {
         // Get the binary data of the image
@@ -81,7 +139,42 @@ class ViewController: UIViewController {
         }
     }
 
+    
+    @objc func selectVideoButtonTapped() {
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .photoLibrary
+        imagePicker.mediaTypes = ["public.movie"]
+        imagePicker.delegate = self
+        present(imagePicker, animated: true, completion: nil)
+    }
 
+    func playSelectedVideo() {
+        guard let videoURL = selectedVideoURL else {
+            return
+        }
+        
+        player = AVPlayer(url: videoURL)
+        playerLayer = AVPlayerLayer(player: player)
+        playerLayer?.frame = videoPlayerView.bounds
+        playerLayer?.videoGravity = .resizeAspectFill
+        videoPlayerView.layer.addSublayer(playerLayer!)
+        player?.play()
+    }
+    
+       @objc func editVideoButtonTapped() {
+           guard let videoURL = selectedVideoURL else {
+                      return
+                  }
+                  
+                  if UIVideoEditorController.canEditVideo(atPath: videoURL.path) {
+                      let videoEditor = UIVideoEditorController()
+                      videoEditor.delegate = self
+                      videoEditor.videoPath = videoURL.path
+                      present(videoEditor, animated: true, completion: nil)
+                  } else {
+                      print("Video editing is not available for the selected video.")
+                  }
+       }
 }
 
 
@@ -140,23 +233,57 @@ private func onNotDetermined(_ onDeniedOrRestricted: @escaping (()->Void), _ onA
 
 
 extension ViewController: UIImagePickerControllerDelegate,
-                              UINavigationControllerDelegate {
-  func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-    // 1
-    picker.dismiss(animated: true)
-  }
-  
-  func imagePickerController(
-    _ picker: UIImagePickerController,
-    didFinishPickingMediaWithInfo
-    info: [UIImagePickerController.InfoKey : Any]
-    ) {
-    picker.dismiss(animated: true)
+                          UINavigationControllerDelegate {
+//    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+//        // 1
+//        picker.dismiss(animated: true)
+//    }
+//
+//    func imagePickerController(
+//        _ picker: UIImagePickerController,
+//        didFinishPickingMediaWithInfo
+//        info: [UIImagePickerController.InfoKey : Any]
+//    ) {
+//        picker.dismiss(animated: true)
+//
+//        // 2
+//        guard let image = info[.originalImage] as? UIImage else {
+//            return
+//        }
+//        //        print(image.size, image.cgImage, image.scale, image.imageOrientation)
+//    }
     
-    // 2
-    guard let image = info[.originalImage] as? UIImage else {
-      return
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true, completion: nil)
+        
+        if let mediaType = info[.mediaType] as? String,
+           mediaType == "public.movie",
+           let videoURL = info[.mediaURL] as? URL {
+            selectedVideoURL = videoURL
+            playSelectedVideo() // Play the selected video
+        }
     }
-//        print(image.size, image.cgImage, image.scale, image.imageOrientation)
-  }
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+}
+
+
+
+
+extension ViewController: UIVideoEditorControllerDelegate {
+    func videoEditorController(_ editor: UIVideoEditorController, didSaveEditedVideoToPath editedVideoPath: String) {
+          editor.dismiss(animated: true, completion: nil)
+          // You can perform actions with the edited video, like saving it or playing it.
+      }
+      
+      func videoEditorControllerDidCancel(_ editor: UIVideoEditorController) {
+          editor.dismiss(animated: true, completion: nil)
+      }
+      
+      func videoEditorController(_ editor: UIVideoEditorController, didFailWithError error: Error) {
+          print("Video editing failed with error: \(error.localizedDescription)")
+          editor.dismiss(animated: true, completion: nil)
+      }
 }
